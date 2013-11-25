@@ -1,3 +1,0 @@
-This project makes fake commits to a specified git repository following the pattern in the aptly named 'pattern.txt' file included in the project. For every period (.) in that file it'll make 10 commits, starting on the first full row/week available on the GitHub profile. The letter X is a placeholder and is ignored.
-
-Other projects can do this and do it a lot better (like https://github.com/gelstudios/gitfiti for one), but I wanted to try it myself.
