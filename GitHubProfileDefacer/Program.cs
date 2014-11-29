@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 using LibGit2Sharp;
 
 namespace GitHubProfileDefacer
@@ -49,11 +47,12 @@ namespace GitHubProfileDefacer
                 string fileInRepo = Path.Combine(repo.Info.WorkingDirectory, theFileToEdit);
 
                 DateTime dateForTopLeftOfGithubProfileMatrix = FigureOutFirstSundayOfOneYearAgo();
+                DateTime startingDate = dateForTopLeftOfGithubProfileMatrix + TimeSpan.FromDays(7 * 8);
                 int howManyDaysWeveCommitted = 0;
                 var r = new Random();
 
-                const int repeatThePatternThisManyTimes = 6;
-                const int commitsPerDay = 10;
+                const int repeatThePatternThisManyTimes = 4;
+                const int commitsPerDay = 6;
 
                 for (int p = 0; p < repeatThePatternThisManyTimes; p++)
                 {
@@ -69,8 +68,7 @@ namespace GitHubProfileDefacer
                                     File.WriteAllText(fileInRepo, r.Next().ToString(CultureInfo.InvariantCulture));
                                     repo.Index.Stage(theFileToEdit);
 
-                                    DateTime commitDate = dateForTopLeftOfGithubProfileMatrix +
-                                                          TimeSpan.FromDays(howManyDaysWeveCommitted);
+                                    DateTime commitDate = startingDate + TimeSpan.FromDays(howManyDaysWeveCommitted);
                                     Signature author = new Signature(githubName, githubEmail, commitDate);
                                     Signature committer = author;
 
