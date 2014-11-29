@@ -52,7 +52,7 @@ namespace GitHubProfileDefacer
                 int howManyDaysWeveCommitted = 0;
                 var r = new Random();
 
-                const int repeatThePatternThisManyTimes = 4;
+                const int repeatThePatternThisManyTimes = 6;
                 const int commitsPerDay = 10;
 
                 for (int p = 0; p < repeatThePatternThisManyTimes; p++)
