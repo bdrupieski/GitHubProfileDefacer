@@ -77,7 +77,7 @@ namespace GitHubProfileDefacer
                                     // it would be cool to generate realistic-sounding commit messages here,
                                     // maybe using markov chains built from the text of other commit messages
                                     // scraped from github or something
-                                    repo.Commit("are you really reading this?", author, committer);
+                                    repo.Commit("hello", author, committer);
                                 }
                             }
 
