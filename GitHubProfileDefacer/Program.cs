@@ -8,10 +8,6 @@ namespace GitHubProfileDefacer
 {
     class Program
     {
-        /// <summary>
-        /// Sunday evening hack. Please don't judge the quality of this code. 
-        /// I only care that it works.
-        /// </summary>
         static void Main(string[] args)
         {
             const string githubName = "your_github_name_here";
@@ -72,9 +68,6 @@ namespace GitHubProfileDefacer
                                     Signature author = new Signature(githubName, githubEmail, commitDate);
                                     Signature committer = author;
 
-                                    // it would be cool to generate realistic-sounding commit messages here,
-                                    // maybe using markov chains built from the text of other commit messages
-                                    // scraped from github or something
                                     repo.Commit("hello", author, committer);
                                 }
                             }
