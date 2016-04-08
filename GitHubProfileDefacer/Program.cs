@@ -39,47 +39,43 @@ namespace GitHubProfileDefacer
                 Console.WriteLine("Going to make commits in this pattern:");
                 Console.WriteLine(string.Join(Environment.NewLine, lines));
 
-                const string theFileToEdit = "something.txt";
+                const string theFileToEdit = "file.txt";
                 string fileInRepo = Path.Combine(repo.Info.WorkingDirectory, theFileToEdit);
 
-                DateTime dateForTopLeftOfGithubProfileMatrix = FigureOutFirstSundayOfOneYearAgo();
-                DateTime startingDate = dateForTopLeftOfGithubProfileMatrix + TimeSpan.FromDays(7 * 8);
+                DateTime dateForTopLeftOfGithubProfileMatrix = FirstSundayOfOneYearAgo();
+                DateTime startingDate = dateForTopLeftOfGithubProfileMatrix + TimeSpan.FromDays(7 * 4);
                 int howManyDaysWeveCommitted = 0;
                 var r = new Random();
 
-                const int repeatThePatternThisManyTimes = 4;
                 const int commitsPerDay = 6;
 
-                for (int p = 0; p < repeatThePatternThisManyTimes; p++)
+                for (int i = 0; i < lines.First().Length; i++)
                 {
-                    for (int i = 0; i < lines.First().Length; i++)
+                    for (int j = 0; j < 7; j++)
                     {
-                        for (int j = 0; j < 7; j++)
+                        var patternCharacter = lines[j][i];
+                        if (patternCharacter == '.')
                         {
-                            var surveySays = lines[j][i];
-                            if (surveySays == '.')
+                            DateTime commitDate = startingDate + TimeSpan.FromDays(howManyDaysWeveCommitted);
+                            Signature author = new Signature(githubName, githubEmail, commitDate);
+                            Signature committer = author;
+
+                            for (int k = 0; k < commitsPerDay; k++)
                             {
-                                for (int k = 0; k < commitsPerDay; k++)
-                                {
-                                    File.WriteAllText(fileInRepo, r.Next().ToString(CultureInfo.InvariantCulture));
-                                    repo.Index.Stage(theFileToEdit);
+                                File.WriteAllText(fileInRepo, r.Next().ToString(CultureInfo.InvariantCulture));
 
-                                    DateTime commitDate = startingDate + TimeSpan.FromDays(howManyDaysWeveCommitted);
-                                    Signature author = new Signature(githubName, githubEmail, commitDate);
-                                    Signature committer = author;
-
-                                    repo.Commit("hello", author, committer);
-                                }
+                                repo.Index.Stage(theFileToEdit);
+                                repo.Commit(".", author, committer);
                             }
-
-                            howManyDaysWeveCommitted++;
                         }
+
+                        howManyDaysWeveCommitted++;
                     }
                 }
             }
         }
 
-        public static DateTime FigureOutFirstSundayOfOneYearAgo()
+        public static DateTime FirstSundayOfOneYearAgo()
         {
             DateTime aYearAgoSunday = DateTime.Now - TimeSpan.FromDays(365);
 
