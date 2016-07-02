@@ -43,7 +43,8 @@ namespace GitHubProfileDefacer
                 string fileInRepo = Path.Combine(repo.Info.WorkingDirectory, theFileToEdit);
 
                 DateTime dateForTopLeftOfGithubProfileMatrix = FirstSundayOfOneYearAgo();
-                DateTime startingDate = dateForTopLeftOfGithubProfileMatrix + TimeSpan.FromDays(7 * 4);
+                int weeksFromLeftToStart = 28;
+                DateTime startingDate = dateForTopLeftOfGithubProfileMatrix + TimeSpan.FromDays(7 * weeksFromLeftToStart);
                 int howManyDaysWeveCommitted = 0;
                 var r = new Random();
 
