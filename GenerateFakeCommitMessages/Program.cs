@@ -11,8 +11,6 @@ namespace GenerateFakeCommitMessages
 {
     class Program
     {
-        static Language language = Language.CSharp;
-
         static void Main(string[] args)
         {
             JsonConvert.DefaultSettings = () => new JsonSerializerSettings
@@ -21,20 +19,41 @@ namespace GenerateFakeCommitMessages
                 Formatting = Formatting.Indented
             };
 
-            var tokenAuth = new Credentials("token");
-            var client = new GitHubClient(new ProductHeaderValue("nope")) { Credentials = tokenAuth };
-            var repositories = LoadRepositoriesFromDiskOrSearchForThem(client);
+            var client = GetClient("credentials.json");
 
-            foreach (var repository in repositories)
+            var languages = new[] {Language.Python, Language.JavaScript, Language.Java, Language.CSharp};
+
+            foreach (var language in languages)
             {
-                var commits = LoadCommitMessagesFromDiskOrSearchForThem(client, repository);
-                Console.WriteLine($"retrieved {commits.Count} commit messages from ${repository.Name}");
+                var langFolder = CreateOrGetLanguageFolder(language);
+                var repositories = LoadRepositoriesFromDiskOrSearchForThem(client, langFolder, language);
+
+                foreach (var repository in repositories)
+                {
+                    var commits = LoadCommitMessagesFromDiskOrSearchForThem(client, langFolder, repository);
+                    Console.WriteLine($"retrieved {commits.Count} commit messages from ${repository.Name}");
+                }
             }
         }
 
-        static List<string> LoadCommitMessagesFromDiskOrSearchForThem(GitHubClient client, Repository repository)
+        static GitHubClient GetClient(string credentialsFilename)
         {
-            var filename = $"{repository.Owner.Login},{repository.Name}.json";
+            var credentials = JsonConvert.DeserializeObject<MyGitHubCredentials>(File.ReadAllText(credentialsFilename));
+            var tokenAuth = new Credentials(credentials.Token);
+            return new GitHubClient(new ProductHeaderValue(credentials.Username)) { Credentials = tokenAuth };
+        }
+
+        static DirectoryInfo CreateOrGetLanguageFolder(Language language)
+        {
+            var langName = language.ToString();
+            return Directory.Exists(langName) 
+                ? new DirectoryInfo(langName) 
+                : Directory.CreateDirectory(langName);
+        }
+
+        static List<string> LoadCommitMessagesFromDiskOrSearchForThem(GitHubClient client, DirectoryInfo langFolder, Repository repository)
+        {
+            var filename = Path.Combine(langFolder.FullName, $"{repository.Owner.Login},{repository.Name}.json");
             List<string> commitMessages;
 
             if (File.Exists(filename))
@@ -70,9 +89,9 @@ namespace GenerateFakeCommitMessages
             return commitMessages;
         }
 
-        static List<Repository> LoadRepositoriesFromDiskOrSearchForThem(GitHubClient client)
+        static List<Repository> LoadRepositoriesFromDiskOrSearchForThem(GitHubClient client, DirectoryInfo langFolder, Language language)
         {
-            var filename = "repos.json";
+            var filename = Path.Combine(langFolder.FullName, "repos.json");
             List<Repository> repos;
 
             if (File.Exists(filename))
@@ -81,7 +100,7 @@ namespace GenerateFakeCommitMessages
             }
             else
             {
-                repos = SearchForAllRepositories(client);
+                repos = SearchForAllRepositories(client, language);
                 var json = JsonConvert.SerializeObject(repos);
                 File.WriteAllText(filename, json);
             }
@@ -89,7 +108,7 @@ namespace GenerateFakeCommitMessages
             return repos;
         }
 
-        static List<Repository> SearchForAllRepositories(GitHubClient client)
+        static List<Repository> SearchForAllRepositories(GitHubClient client, Language language)
         {
             var searchRepoRequest = new SearchRepositoriesRequest
             {
@@ -104,7 +123,7 @@ namespace GenerateFakeCommitMessages
 
             int totalItems = repos.TotalCount;
 
-            while (results.Count < totalItems && repos.Items.Any())
+            while (results.Count < totalItems && repos.Items.Any() && searchRepoRequest.Page < 10)
             {
                 searchRepoRequest.Page++;
 
