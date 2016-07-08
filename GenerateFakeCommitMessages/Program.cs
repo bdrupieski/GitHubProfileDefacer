@@ -3,7 +3,9 @@ using Octokit;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
+using GenerateFakeCommitMessages.MarkovChainModel;
 using JsonNet.PrivateSettersContractResolvers;
 using Newtonsoft.Json;
 
@@ -28,11 +30,27 @@ namespace GenerateFakeCommitMessages
                 var langFolder = CreateOrGetLanguageFolder(language);
                 var repositories = LoadRepositoriesFromDiskOrSearchForThem(client, langFolder, language);
 
+                var allCommitMessages = new List<string>();
                 foreach (var repository in repositories)
                 {
-                    var commits = LoadCommitMessagesFromDiskOrSearchForThem(client, langFolder, repository);
-                    Console.WriteLine($"retrieved {commits.Count} commit messages from ${repository.Name}");
+                    var commitMessages = LoadCommitMessagesFromDiskOrSearchForThem(client, langFolder, repository);
+                    Console.WriteLine($"retrieved {commitMessages.Count} commit messages from ${repository.Name}");
+                    var splitMessages = commitMessages.SelectMany(x => x.Split(new[] {"\n", "\r\n"}, StringSplitOptions.RemoveEmptyEntries));
+                    allCommitMessages.AddRange(splitMessages);
                 }
+
+                var markovModel = MarkovModel.Build(allCommitMessages);
+                var sb = new StringBuilder();
+                sb.AppendLine(language.ToString());
+                sb.AppendLine($"Most probable sentence: {markovModel.GenerateMostLikelySentence()}");
+                sb.AppendLine();
+                sb.AppendLine("Likely sentences:");
+                for (int i = 0; i < 5000; i++)
+                {
+                    sb.AppendLine(markovModel.GenerateProbableSentence());
+                }
+                var sentenceReportFilename = Path.Combine(langFolder.FullName, "sentences.txt");
+                File.WriteAllText(sentenceReportFilename, sb.ToString());
             }
         }
 
