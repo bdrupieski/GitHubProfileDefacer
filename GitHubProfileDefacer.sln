@@ -1,7 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GitHubProfileDefacer", "GitHubProfileDefacer\GitHubProfileDefacer.csproj", "{EBC4DA2C-0544-4923-A59C-475C0C329604}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenerateFakeCommitMessages", "GenerateFakeCommitMessages\GenerateFakeCommitMessages.csproj", "{7F9CF3AD-970B-4886-A688-37AE850C1A4F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,6 +17,10 @@ Global
 		{EBC4DA2C-0544-4923-A59C-475C0C329604}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EBC4DA2C-0544-4923-A59C-475C0C329604}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EBC4DA2C-0544-4923-A59C-475C0C329604}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7F9CF3AD-970B-4886-A688-37AE850C1A4F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7F9CF3AD-970B-4886-A688-37AE850C1A4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7F9CF3AD-970B-4886-A688-37AE850C1A4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7F9CF3AD-970B-4886-A688-37AE850C1A4F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

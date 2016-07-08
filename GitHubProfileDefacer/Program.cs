@@ -65,7 +65,7 @@ namespace GitHubProfileDefacer
                             {
                                 File.WriteAllText(fileInRepo, r.Next().ToString(CultureInfo.InvariantCulture));
 
-                                repo.Index.Stage(theFileToEdit);
+                                repo.Stage(theFileToEdit);
                                 repo.Commit(".", author, committer);
                             }
                         }
