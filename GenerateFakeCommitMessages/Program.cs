@@ -123,6 +123,7 @@ namespace GenerateFakeCommitMessages
 
             int totalItems = repos.TotalCount;
 
+            // search restricted to first 1000 results, so stop after ten 100 result pages
             while (results.Count < totalItems && repos.Items.Any() && searchRepoRequest.Page < 10)
             {
                 searchRepoRequest.Page++;
