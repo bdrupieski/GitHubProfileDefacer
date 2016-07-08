@@ -91,6 +91,7 @@ namespace GenerateFakeCommitMessages
                     catch (AggregateException e) when (e.InnerException is RateLimitExceededException)
                     {
                         var exception = (RateLimitExceededException)e.InnerException;
+                        Console.WriteLine($"Hit rate limit. Waiting until {exception.Reset.LocalDateTime}");
                         while (DateTimeOffset.UtcNow < exception.Reset)
                         {
                             Thread.Sleep(30000);
