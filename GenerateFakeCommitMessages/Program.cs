@@ -3,6 +3,7 @@ using Octokit;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading;
 using GenerateFakeCommitMessages.MarkovChainModel;
@@ -90,7 +91,7 @@ namespace GenerateFakeCommitMessages
             }
             else
             {
-                List<GitHubCommit> commits;
+                List<GitHubCommit> commits = null;
                 while (true)
                 {
                     try
@@ -107,9 +108,14 @@ namespace GenerateFakeCommitMessages
                             Thread.Sleep(30000);
                         }
                     }
+                    catch (AggregateException e) when (e.InnerException is ApiException &&
+                                                       ((ApiException)e.InnerException).StatusCode == HttpStatusCode.InternalServerError)
+                    {
+                        break;
+                    }
                 }
-                
-                commitMessages = commits.Select(x => x.Commit.Message).ToList();
+
+                commitMessages = commits?.Select(x => x.Commit.Message).ToList() ?? new List<string>();
                 var json = JsonConvert.SerializeObject(commitMessages);
 
                 File.WriteAllText(filename, json);
