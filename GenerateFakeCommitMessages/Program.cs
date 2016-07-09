@@ -23,7 +23,17 @@ namespace GenerateFakeCommitMessages
 
             var client = GetClient("credentials.json");
 
-            var languages = new[] {Language.Python, Language.JavaScript, Language.Java, Language.CSharp};
+            var languages = new[]
+            {
+                Language.Python,
+                Language.JavaScript,
+                Language.Java,
+                Language.CSharp,
+                Language.Scala,
+                Language.Ruby,
+                Language.CPlusPlus,
+                Language.ObjectiveC
+            };
 
             foreach (var language in languages)
             {
@@ -132,7 +142,7 @@ namespace GenerateFakeCommitMessages
             var searchRepoRequest = new SearchRepositoriesRequest
             {
                 Language = language,
-                Stars = Range.GreaterThan(500),
+                Stars = Range.GreaterThan(30),
             };
 
             var results = new List<Repository>();
