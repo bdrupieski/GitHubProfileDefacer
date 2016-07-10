@@ -2,7 +2,7 @@
 
 namespace GenerateFakeCommitMessages.MarkovChainModel
 {
-    public class Digram : IEquatable<Digram>
+    public struct Digram : IEquatable<Digram>
     {
         public Digram(string first, string second)
         {
@@ -10,45 +10,41 @@ namespace GenerateFakeCommitMessages.MarkovChainModel
             Second = second;
         }
 
-        public static bool operator ==(Digram left, Digram right)
-        {
-            return Equals(left, right);
-        }
-
-        public static bool operator !=(Digram left, Digram right)
-        {
-            return !Equals(left, right);
-        }
-
         public string First { get; }
         public string Second { get; }
 
         public bool Equals(Digram other)
         {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
             return string.Equals(First, other.First) && string.Equals(Second, other.Second);
         }
 
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != GetType()) return false;
-            return Equals((Digram)obj);
+            return obj is Digram && Equals((Digram) obj);
         }
 
         public override int GetHashCode()
         {
             unchecked
             {
-                return ((First?.GetHashCode() ?? 0) * 397) ^ (Second?.GetHashCode() ?? 0);
+                return (First.GetHashCode()*397) ^ Second.GetHashCode();
             }
+        }
+
+        public static bool operator ==(Digram left, Digram right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(Digram left, Digram right)
+        {
+            return !left.Equals(right);
         }
 
         public override string ToString()
         {
-            return $"[ {First}, {Second}]";
+            return $"[{First}, {Second}]";
         }
     }
 }
