@@ -12,7 +12,7 @@ namespace GenerateFakeCommitMessages.MarkovChainModel
     {
         private readonly Random _r = new Random();
 
-        private IDictionary<Digram, IDictionary<string, int>> _frequencies;
+        private IDictionary<Digram, Dictionary<string, int>> _frequencies;
 
         private MarkovModel() { }
 
@@ -62,39 +62,115 @@ namespace GenerateFakeCommitMessages.MarkovChainModel
             return allTrigrams;
         }
 
-        private static IDictionary<Digram, IDictionary<string, int>> GenerateFrequenciesFromTrigrams(IEnumerable<Trigram> trigrams)
+        private static IDictionary<Digram, Dictionary<string, int>> GenerateFrequenciesFromTrigrams(IEnumerable<Trigram> trigrams)
         {
-            var thirdWordFrequencies = new Dictionary<Digram, IDictionary<string, int>>();
+            // cool but slow
+            //return trigrams
+            //    .AsParallel()
+            //    .Select(x => new {Digram = new Digram(x.First, x.Second), third = x.Third})
+            //    .GroupBy(x => x.Digram)
+            //    .ToDictionary(x => x.Key, y => y.GroupBy(z => z.third).ToDictionary(a => a.Key, b => b.Count()));
 
-            foreach (var trigram in trigrams)
+            var sw = Stopwatch.StartNew();
+            var frequencyDictionaries = new ConcurrentBag<Dictionary<Digram, Dictionary<string, int>>>();
+            var partitions = Partitioner.Create(trigrams).GetPartitions(20);
+            Parallel.ForEach(partitions, trigramEnumerator =>
             {
-                var digram = new Digram(trigram.First, trigram.Second);
+                var freqs = new Dictionary<Digram, Dictionary<string, int>>();
 
-                if (!thirdWordFrequencies.ContainsKey(digram))
+                while (trigramEnumerator.MoveNext())
                 {
-                    thirdWordFrequencies[digram] = new Dictionary<string, int>();
+                    var trigram = trigramEnumerator.Current;
+
+                    var digram = new Digram(trigram.First, trigram.Second);
+
+                    if (!freqs.ContainsKey(digram))
+                    {
+                        freqs[digram] = new Dictionary<string, int>();
+                    }
+
+                    if (!freqs[digram].ContainsKey(trigram.Third))
+                    {
+                        freqs[digram][trigram.Third] = 1;
+                    }
+                    else
+                    {
+                        freqs[digram][trigram.Third]++;
+                    }
                 }
 
-                if (!thirdWordFrequencies[digram].ContainsKey(trigram.Third))
+                frequencyDictionaries.Add(freqs);
+            });
+
+            sw.Stop();
+            Console.WriteLine($"{sw.ElapsedMilliseconds} ms to count");
+            sw = Stopwatch.StartNew();
+
+            var thirdWordFrequencies = new Dictionary<Digram, Dictionary<string, int>>();
+
+            foreach (var frequencyDictionary in frequencyDictionaries)
+            {
+                foreach (var digramFreq in frequencyDictionary)
                 {
-                    thirdWordFrequencies[digram][trigram.Third] = 1;
-                }
-                else
-                {
-                    thirdWordFrequencies[digram][trigram.Third]++;
+                    if (!thirdWordFrequencies.ContainsKey(digramFreq.Key))
+                    {
+                        thirdWordFrequencies[digramFreq.Key] = digramFreq.Value;
+                    }
+                    else
+                    {
+                        var thirdWordFreqForDigram = thirdWordFrequencies[digramFreq.Key];
+                        var toAdd = digramFreq.Value;
+
+                        foreach (var i in toAdd)
+                        {
+                            if (thirdWordFreqForDigram.ContainsKey(i.Key))
+                            {
+                                thirdWordFreqForDigram[i.Key]++;
+                            }
+                            else
+                            {
+                                thirdWordFreqForDigram[i.Key] = 1;
+                            }
+                        }
+                    }
                 }
             }
+            sw.Stop();
+            Console.WriteLine($"{sw.ElapsedMilliseconds} to combine");
 
             return thirdWordFrequencies;
+
+            //var thirdWordFrequencies = new Dictionary<Digram, Dictionary<string, int>>();
+
+            //foreach (var trigram in trigrams)
+            //{
+            //    var digram = new Digram(trigram.First, trigram.Second);
+
+            //    if (!thirdWordFrequencies.ContainsKey(digram))
+            //    {
+            //        thirdWordFrequencies[digram] = new Dictionary<string, int>();
+            //    }
+
+            //    if (!thirdWordFrequencies[digram].ContainsKey(trigram.Third))
+            //    {
+            //        thirdWordFrequencies[digram][trigram.Third] = 1;
+            //    }
+            //    else
+            //    {
+            //        thirdWordFrequencies[digram][trigram.Third]++;
+            //    }
+            //}
+
+            //return thirdWordFrequencies;
         }
 
 
-        private string MostLikelyNextWord(IDictionary<Digram, IDictionary<string, int>> wordFreq, Digram digram)
+        private string MostLikelyNextWord(IDictionary<Digram, Dictionary<string, int>> wordFreq, Digram digram)
         {
             return wordFreq[digram].OrderByDescending(x => x.Value).First().Key;
         }
 
-        private string ProbableNextWord(IDictionary<Digram, IDictionary<string, int>> wordFreq, Digram digram)
+        private string ProbableNextWord(IDictionary<Digram, Dictionary<string, int>> wordFreq, Digram digram)
         {
             var words = wordFreq[digram].OrderBy(x => x.Value);
             int runningSum = 0;
@@ -112,7 +188,7 @@ namespace GenerateFakeCommitMessages.MarkovChainModel
             return probableWord.Item1;
         }
 
-        private string RandomNextWord(IDictionary<Digram, IDictionary<string, int>> wordFreq, Digram digram)
+        private string RandomNextWord(IDictionary<Digram, Dictionary<string, int>> wordFreq, Digram digram)
         {
             var words = wordFreq[digram].ToArray();
             var randomWordIndex = _r.Next(0, words.Length);
@@ -120,7 +196,7 @@ namespace GenerateFakeCommitMessages.MarkovChainModel
             return randomWord.Key;
         }
 
-        private string GenerateSentence(Func<IDictionary<Digram, IDictionary<string, int>>, Digram, string> nextWordFunc)
+        private string GenerateSentence(Func<IDictionary<Digram, Dictionary<string, int>>, Digram, string> nextWordFunc)
         {
             var sentenceWords = new List<string>();
 
