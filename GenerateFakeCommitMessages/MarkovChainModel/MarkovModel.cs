@@ -1,8 +1,9 @@
 ﻿using MoreLinq;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace GenerateFakeCommitMessages.MarkovChainModel
 {
@@ -10,11 +11,11 @@ namespace GenerateFakeCommitMessages.MarkovChainModel
     {
         private readonly Random _r = new Random();
 
-        private Dictionary<Digram, Dictionary<string, int>> _frequencies;
+        private IDictionary<Digram, Dictionary<string, int>> _frequencies;
 
         private MarkovModel() { }
 
-        public static MarkovModel Build(IEnumerable<string> passages)
+        public static MarkovModel Build(IList<string> passages)
         {
             var allTrigrams = GenerateTrigrams(passages);
             var m = new MarkovModel
@@ -25,49 +26,44 @@ namespace GenerateFakeCommitMessages.MarkovChainModel
             return m;
         }
 
-        private static List<Trigram> GenerateTrigrams(IEnumerable<string> passages)
+        private static IEnumerable<Trigram> GenerateTrigrams(IEnumerable<string> passages)
         {
-            var allTrigrams = new List<Trigram>();
-            Regex sentenceSplitter = new Regex(@"(?<=[.\!\?])\s+(?=[A-Z])");
+            var space = new[] {' '};
+            var startAndEndBuffer = new[] { "", "" };
 
-            foreach (var passage in passages)
+            var allTrigrams = new ConcurrentBag<Trigram>();
+            var partitions = Partitioner.Create(passages);
+            Parallel.ForEach(partitions, passage =>
             {
-                var sentences = sentenceSplitter.Split(passage);
+                var words = passage.Split(space, StringSplitOptions.RemoveEmptyEntries);
+                var wordsWithBuffers = startAndEndBuffer.Concat(words).Concat(startAndEndBuffer);
+                var wordsInGroupsOf3 = wordsWithBuffers.Windowed(3);
 
-                foreach (var sentence in sentences)
+                foreach (var group in wordsInGroupsOf3)
                 {
-                    var words = sentence.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-
-                    var empty = new[] { "", "" };
-                    var wordsWithBuffers = empty.Concat(words).Concat(empty);
-
-                    var wordsInGroupsOf3 = wordsWithBuffers.Windowed(3);
-
-                    var trigramsForSentence = new List<Trigram>();
-                    foreach (var group in wordsInGroupsOf3)
+                    var wordsInGroup = (IList<string>) group;
+                    var trigram = new Trigram
                     {
-                        var wordsInGroup = @group.ToArray();
-                        if (wordsInGroup.Length >= 3)
-                        {
-                            var trigram = new Trigram
-                            {
-                                First = wordsInGroup[0],
-                                Second = wordsInGroup[1],
-                                Third = wordsInGroup[2]
-                            };
-                            trigramsForSentence.Add(trigram);
-                        }
-                    }
-
-                    allTrigrams.AddRange(trigramsForSentence);
+                        First = wordsInGroup[0],
+                        Second = wordsInGroup[1],
+                        Third = wordsInGroup[2]
+                    };
+                    allTrigrams.Add(trigram);
                 }
-            }
+            });
 
             return allTrigrams;
         }
 
-        private static Dictionary<Digram, Dictionary<string, int>> GenerateFrequenciesFromTrigrams(IEnumerable<Trigram> trigrams)
+        private static IDictionary<Digram, Dictionary<string, int>> GenerateFrequenciesFromTrigrams(IEnumerable<Trigram> trigrams)
         {
+            // cool but slow
+            //return trigrams
+            //    .AsParallel()
+            //    .Select(x => new {Digram = new Digram(x.First, x.Second), third = x.Third})
+            //    .GroupBy(x => x.Digram)
+            //    .ToDictionary(x => x.Key, y => y.GroupBy(z => z.third).ToDictionary(a => a.Key, b => b.Count()));
+
             var thirdWordFrequencies = new Dictionary<Digram, Dictionary<string, int>>();
 
             foreach (var trigram in trigrams)
@@ -93,12 +89,12 @@ namespace GenerateFakeCommitMessages.MarkovChainModel
         }
 
 
-        private string MostLikelyNextWord(Dictionary<Digram, Dictionary<string, int>> wordFreq, Digram digram)
+        private string MostLikelyNextWord(IDictionary<Digram, Dictionary<string, int>> wordFreq, Digram digram)
         {
             return wordFreq[digram].OrderByDescending(x => x.Value).First().Key;
         }
 
-        private string ProbableNextWord(Dictionary<Digram, Dictionary<string, int>> wordFreq, Digram digram)
+        private string ProbableNextWord(IDictionary<Digram, Dictionary<string, int>> wordFreq, Digram digram)
         {
             var words = wordFreq[digram].OrderBy(x => x.Value);
             int runningSum = 0;
@@ -116,7 +112,7 @@ namespace GenerateFakeCommitMessages.MarkovChainModel
             return probableWord.Item1;
         }
 
-        private string RandomNextWord(Dictionary<Digram, Dictionary<string, int>> wordFreq, Digram digram)
+        private string RandomNextWord(IDictionary<Digram, Dictionary<string, int>> wordFreq, Digram digram)
         {
             var words = wordFreq[digram].ToArray();
             var randomWordIndex = _r.Next(0, words.Length);
@@ -124,7 +120,7 @@ namespace GenerateFakeCommitMessages.MarkovChainModel
             return randomWord.Key;
         }
 
-        private string GenerateSentence(Func<Dictionary<Digram, Dictionary<string, int>>, Digram, string> nextWordFunc)
+        private string GenerateSentence(Func<IDictionary<Digram, Dictionary<string, int>>, Digram, string> nextWordFunc)
         {
             var sentenceWords = new List<string>();
 

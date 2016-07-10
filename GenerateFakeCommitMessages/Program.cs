@@ -33,7 +33,7 @@ namespace GenerateFakeCommitMessages
                 Language.Scala,
                 Language.Ruby,
                 Language.CPlusPlus,
-                Language.ObjectiveC
+                Language.ObjectiveC,
             };
 
             foreach (var language in languages)
@@ -46,7 +46,7 @@ namespace GenerateFakeCommitMessages
                 {
                     var commitMessages = LoadCommitMessagesFromDiskOrSearchForThem(client, langFolder, repository);
                     Console.WriteLine($"retrieved {commitMessages.Count} commit messages from ${repository.Name}");
-                    var splitMessages = commitMessages.SelectMany(x => x.Split(new[] {"\n", "\r\n"}, StringSplitOptions.RemoveEmptyEntries));
+                    var splitMessages = commitMessages.Select(x => x.Replace("\n", " ").Replace("\r\n", " "));
                     allCommitMessages.AddRange(splitMessages);
                 }
 
@@ -56,7 +56,7 @@ namespace GenerateFakeCommitMessages
                 sb.AppendLine($"Most probable sentence: {markovModel.GenerateMostLikelySentence()}");
                 sb.AppendLine();
                 sb.AppendLine("Likely sentences:");
-                for (int i = 0; i < 5000; i++)
+                for (int i = 0; i < 500; i++)
                 {
                     sb.AppendLine(markovModel.GenerateProbableSentence());
                 }

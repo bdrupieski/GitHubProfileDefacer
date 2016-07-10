@@ -1,6 +1,6 @@
 ﻿namespace GenerateFakeCommitMessages.MarkovChainModel
 {
-    public class Trigram
+    public struct Trigram
     {
         public string First { get; set; }
         public string Second { get; set; }
