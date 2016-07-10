@@ -1,7 +1,6 @@
 ﻿using System;
 using Octokit;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -28,13 +27,13 @@ namespace GenerateFakeCommitMessages
             var languages = new[]
             {
                 Language.Python,
-                //Language.JavaScript,
-                //Language.Java,
-                //Language.CSharp,
-                //Language.Scala,
-                //Language.Ruby,
-                //Language.CPlusPlus,
-                //Language.ObjectiveC,
+                Language.JavaScript,
+                Language.Java,
+                Language.CSharp,
+                Language.Scala,
+                Language.Ruby,
+                Language.CPlusPlus,
+                Language.ObjectiveC,
             };
 
             foreach (var language in languages)
@@ -50,13 +49,9 @@ namespace GenerateFakeCommitMessages
                     var splitMessages = commitMessages.Select(x => x.Replace("\n", " ").Replace("\r\n", " "));
                     allCommitMessages.AddRange(splitMessages);
                 }
-                var sw = Stopwatch.StartNew();
-                var markovModel = MarkovModel.Build(allCommitMessages.Take(100000).ToList());
-                sw.Stop();
-                
-                Console.WriteLine($"{sw.ElapsedMilliseconds} ms to build model");
+
+                var markovModel = MarkovModel.Build(allCommitMessages.ToList());
                 var sb = new StringBuilder();
-                sw = Stopwatch.StartNew();
                 sb.AppendLine(language.ToString());
                 sb.AppendLine($"Most probable sentence: {markovModel.GenerateMostLikelySentence()}");
                 sb.AppendLine();
@@ -65,7 +60,6 @@ namespace GenerateFakeCommitMessages
                 {
                     sb.AppendLine(markovModel.GenerateProbableSentence());
                 }
-                Console.WriteLine($"{sw.ElapsedMilliseconds} for generating 500");
                 var sentenceReportFilename = Path.Combine(langFolder.FullName, "sentences.txt");
                 File.WriteAllText(sentenceReportFilename, sb.ToString());
             }

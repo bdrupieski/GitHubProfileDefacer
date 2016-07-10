@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -18,17 +17,11 @@ namespace GenerateFakeCommitMessages.MarkovChainModel
 
         public static MarkovModel Build(IList<string> passages)
         {
-            var sw = Stopwatch.StartNew();
             var allTrigrams = GenerateTrigrams(passages);
-            sw.Stop();
-            Console.WriteLine($"{sw.ElapsedMilliseconds} ms to generate trigrams");
-            sw = Stopwatch.StartNew();
             var m = new MarkovModel
             {
                 _frequencies = GenerateFrequenciesFromTrigrams(allTrigrams)
             };
-            sw.Stop();
-            Console.WriteLine($"{sw.ElapsedMilliseconds} ms to generate model");
 
             return m;
         }
@@ -71,97 +64,28 @@ namespace GenerateFakeCommitMessages.MarkovChainModel
             //    .GroupBy(x => x.Digram)
             //    .ToDictionary(x => x.Key, y => y.GroupBy(z => z.third).ToDictionary(a => a.Key, b => b.Count()));
 
-            var sw = Stopwatch.StartNew();
-            var frequencyDictionaries = new ConcurrentBag<Dictionary<Digram, Dictionary<string, int>>>();
-            var partitions = Partitioner.Create(trigrams).GetPartitions(20);
-            Parallel.ForEach(partitions, trigramEnumerator =>
-            {
-                var freqs = new Dictionary<Digram, Dictionary<string, int>>();
-
-                while (trigramEnumerator.MoveNext())
-                {
-                    var trigram = trigramEnumerator.Current;
-
-                    var digram = new Digram(trigram.First, trigram.Second);
-
-                    if (!freqs.ContainsKey(digram))
-                    {
-                        freqs[digram] = new Dictionary<string, int>();
-                    }
-
-                    if (!freqs[digram].ContainsKey(trigram.Third))
-                    {
-                        freqs[digram][trigram.Third] = 1;
-                    }
-                    else
-                    {
-                        freqs[digram][trigram.Third]++;
-                    }
-                }
-
-                frequencyDictionaries.Add(freqs);
-            });
-
-            sw.Stop();
-            Console.WriteLine($"{sw.ElapsedMilliseconds} ms to count");
-            sw = Stopwatch.StartNew();
-
             var thirdWordFrequencies = new Dictionary<Digram, Dictionary<string, int>>();
 
-            foreach (var frequencyDictionary in frequencyDictionaries)
+            foreach (var trigram in trigrams)
             {
-                foreach (var digramFreq in frequencyDictionary)
-                {
-                    if (!thirdWordFrequencies.ContainsKey(digramFreq.Key))
-                    {
-                        thirdWordFrequencies[digramFreq.Key] = digramFreq.Value;
-                    }
-                    else
-                    {
-                        var thirdWordFreqForDigram = thirdWordFrequencies[digramFreq.Key];
-                        var toAdd = digramFreq.Value;
+                var digram = new Digram(trigram.First, trigram.Second);
 
-                        foreach (var i in toAdd)
-                        {
-                            if (thirdWordFreqForDigram.ContainsKey(i.Key))
-                            {
-                                thirdWordFreqForDigram[i.Key]++;
-                            }
-                            else
-                            {
-                                thirdWordFreqForDigram[i.Key] = 1;
-                            }
-                        }
-                    }
+                if (!thirdWordFrequencies.ContainsKey(digram))
+                {
+                    thirdWordFrequencies[digram] = new Dictionary<string, int>();
+                }
+
+                if (!thirdWordFrequencies[digram].ContainsKey(trigram.Third))
+                {
+                    thirdWordFrequencies[digram][trigram.Third] = 1;
+                }
+                else
+                {
+                    thirdWordFrequencies[digram][trigram.Third]++;
                 }
             }
-            sw.Stop();
-            Console.WriteLine($"{sw.ElapsedMilliseconds} to combine");
 
             return thirdWordFrequencies;
-
-            //var thirdWordFrequencies = new Dictionary<Digram, Dictionary<string, int>>();
-
-            //foreach (var trigram in trigrams)
-            //{
-            //    var digram = new Digram(trigram.First, trigram.Second);
-
-            //    if (!thirdWordFrequencies.ContainsKey(digram))
-            //    {
-            //        thirdWordFrequencies[digram] = new Dictionary<string, int>();
-            //    }
-
-            //    if (!thirdWordFrequencies[digram].ContainsKey(trigram.Third))
-            //    {
-            //        thirdWordFrequencies[digram][trigram.Third] = 1;
-            //    }
-            //    else
-            //    {
-            //        thirdWordFrequencies[digram][trigram.Third]++;
-            //    }
-            //}
-
-            //return thirdWordFrequencies;
         }
 
 
