@@ -167,6 +167,13 @@ namespace GenerateFakeCommitMessages
                 results.AddRange(repos.Items.ToList());
             }
 
+            var badRepoNames = new HashSet<string>
+            {
+                "liferay-portal",
+            };
+
+            results.RemoveAll(x => badRepoNames.Contains(x.Name));
+
             return results;
         }
     }
