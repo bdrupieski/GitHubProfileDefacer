@@ -32,8 +32,8 @@ namespace GenerateFakeCommitMessages
                 Language.CSharp,
                 Language.Scala,
                 Language.Ruby,
-                Language.CPlusPlus,
                 Language.ObjectiveC,
+                Language.Php,
             };
 
             foreach (var language in languages)
@@ -167,12 +167,12 @@ namespace GenerateFakeCommitMessages
                 results.AddRange(repos.Items.ToList());
             }
 
-            var badRepoNames = new HashSet<string>
+            var reposOver150000Commits = new HashSet<string>
             {
                 "liferay-portal",
             };
 
-            results.RemoveAll(x => badRepoNames.Contains(x.Name));
+            results.RemoveAll(x => reposOver150000Commits.Contains(x.Name));
 
             return results;
         }
