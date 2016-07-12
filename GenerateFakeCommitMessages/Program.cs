@@ -56,7 +56,7 @@ namespace GenerateFakeCommitMessages
                 sb.AppendLine($"Most probable sentence: {markovModel.GenerateMostLikelySentence()}");
                 sb.AppendLine();
                 sb.AppendLine("Likely sentences:");
-                for (int i = 0; i < 500; i++)
+                for (int i = 0; i < 1000; i++)
                 {
                     sb.AppendLine(markovModel.GenerateProbableSentence());
                 }
