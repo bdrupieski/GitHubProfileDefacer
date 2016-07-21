@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -48,6 +49,8 @@ namespace GitHubProfileDefacer
                 int howManyDaysWeveCommitted = 0;
                 var r = new Random();
 
+                var commitMessages = CommitMessages.Get();
+
                 const int commitsPerDay = 6;
 
                 for (int i = 0; i < lines.First().Length; i++)
@@ -66,7 +69,7 @@ namespace GitHubProfileDefacer
                                 File.WriteAllText(fileInRepo, r.Next().ToString(CultureInfo.InvariantCulture));
 
                                 repo.Stage(theFileToEdit);
-                                repo.Commit(".", author, committer);
+                                repo.Commit(commitMessages.NextCommitMessage(), author, committer);
                             }
                         }
 
@@ -86,6 +89,40 @@ namespace GitHubProfileDefacer
             }
 
             return aYearAgoSunday;
+        }
+
+        class CommitMessages
+        {
+            private readonly List<string> _commitMessages;
+            private readonly Random _r  = new Random();
+
+            public CommitMessages(List<string> commitMessages)
+            {
+                _commitMessages = commitMessages;
+            }
+
+            public string NextCommitMessage()
+            {
+                var randomIndex = _r.Next(0, _commitMessages.Count);
+                return _commitMessages[randomIndex];
+            }
+
+            public static CommitMessages Get()
+            {
+                List<string> commitMessages;
+                var fakeCommitFilename = "sentences.txt";
+                if (File.Exists(fakeCommitFilename))
+                {
+                    var lines = File.ReadAllLines(fakeCommitFilename);
+                    commitMessages = lines.Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
+                }
+                else
+                {
+                    commitMessages = new List<string> { "." };
+                }
+
+                return new CommitMessages(commitMessages);
+            }
         }
     }
 }
