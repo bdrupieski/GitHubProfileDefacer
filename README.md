@@ -5,6 +5,22 @@ commits to a git repository following the
 pattern specified in the file "pattern.txt". 
 The letter X is a placeholder and is ignored.
 
+It can turn this:
+
+```
+XXXXXXXXXXXXXXXXXXXXX
+XX.XXXXXXX.X...XXXXXX
+XX.XXX.XXXXXXX.X.XXXX
+XX...X...X.X...X...XX
+XX.X.X.XXX.X.X.X.X.XX
+XX...X.XXX.X...X.X.XX
+XXXXXXXXXXXXXXXXXXXXX
+```
+
+Into this:
+
+![](github_graph.png)
+
 There are other projects that can also do this, 
 like [gitfiti](https://github.com/gelstudios/gitfiti).
 
