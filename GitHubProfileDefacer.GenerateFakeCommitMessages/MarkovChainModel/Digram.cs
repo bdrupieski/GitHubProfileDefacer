@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace GenerateFakeCommitMessages.MarkovChainModel
+namespace GitHubProfileDefacer.GenerateFakeCommitMessages.MarkovChainModel
 {
     public struct Digram : IEquatable<Digram>
     {

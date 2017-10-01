@@ -1,16 +1,17 @@
 ﻿using System;
-using Octokit;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading;
-using GenerateFakeCommitMessages.MarkovChainModel;
+using GitHubProfileDefacer.Common;
+using GitHubProfileDefacer.GenerateFakeCommitMessages.MarkovChainModel;
 using JsonNet.PrivateSettersContractResolvers;
 using Newtonsoft.Json;
+using Octokit;
 
-namespace GenerateFakeCommitMessages
+namespace GitHubProfileDefacer.GenerateFakeCommitMessages
 {
     class Program
     {
@@ -22,7 +23,8 @@ namespace GenerateFakeCommitMessages
                 Formatting = Formatting.Indented
             };
 
-            var client = GetClient("credentials.json");
+            var credentials = GitHubCredentials.GetGitHubCredentials();
+            var client = GetGitHubClient(credentials);
 
             var languages = new[]
             {
@@ -65,11 +67,10 @@ namespace GenerateFakeCommitMessages
             }
         }
 
-        static GitHubClient GetClient(string credentialsFilename)
+        static GitHubClient GetGitHubClient(GitHubCredentials gitHubCredentials)
         {
-            var credentials = JsonConvert.DeserializeObject<MyGitHubCredentials>(File.ReadAllText(credentialsFilename));
-            var tokenAuth = new Credentials(credentials.Token);
-            return new GitHubClient(new ProductHeaderValue(credentials.Username)) { Credentials = tokenAuth };
+            var tokenAuth = new Credentials(gitHubCredentials.Token);
+            return new GitHubClient(new ProductHeaderValue(gitHubCredentials.Username)) { Credentials = tokenAuth };
         }
 
         static DirectoryInfo CreateOrGetLanguageFolder(Language language)

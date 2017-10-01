@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using GitHubProfileDefacer.Common;
 using LibGit2Sharp;
 
 namespace GitHubProfileDefacer
@@ -11,11 +12,11 @@ namespace GitHubProfileDefacer
     {
         static void Main(string[] args)
         {
-            const string githubName = "your_github_name_here";
-            const string githubEmail = "your_github_email_here";
             const string pathOfRepo = @"C:\wherever\yours\is";
 
             const string patternFile = "pattern.txt";
+
+            var gitHubCredentials = GitHubCredentials.GetGitHubCredentials();
 
             string rootedPath = Repository.Init(pathOfRepo);
             Console.WriteLine("Using repo here: {0}", rootedPath);
@@ -44,7 +45,7 @@ namespace GitHubProfileDefacer
                 string fileInRepo = Path.Combine(repo.Info.WorkingDirectory, theFileToEdit);
 
                 DateTime dateForTopLeftOfGithubProfileMatrix = FirstSundayOfOneYearAgo();
-                int weeksFromLeftToStart = 28;
+                int weeksFromLeftToStart = 23;
                 DateTime startingDate = dateForTopLeftOfGithubProfileMatrix + TimeSpan.FromDays(7 * weeksFromLeftToStart);
                 int howManyDaysWeveCommitted = 0;
                 var r = new Random();
@@ -61,7 +62,7 @@ namespace GitHubProfileDefacer
                         if (patternCharacter == '.')
                         {
                             DateTime commitDate = startingDate + TimeSpan.FromDays(howManyDaysWeveCommitted);
-                            Signature author = new Signature(githubName, githubEmail, commitDate);
+                            Signature author = new Signature(gitHubCredentials.Username, gitHubCredentials.Email, commitDate);
                             Signature committer = author;
 
                             for (int k = 0; k < commitsPerDay; k++)
